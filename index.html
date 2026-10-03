@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#101a2c">
+<title>SAVE THE WORKER</title>
+<style>
+:root{--navy:#101a2c;--panel:#1a2940;--yellow:#ffd447;--mint:#53e0b5;--white:#f7fbff;--muted:#9eb1c9;--red:#ff657a}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:Inter,ui-rounded,system-ui,-apple-system,Segoe UI,sans-serif;background:radial-gradient(ellipse at top,#243b5b 0%,#101a2c 58%);color:var(--white)}
+body{display:flex;justify-content:center;padding:12px;overflow-x:hidden}
+.app{width:min(100%,980px);display:flex;flex-direction:column;gap:12px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 15px;background:#142238;border:1px solid #314764;border-radius:18px;box-shadow:0 10px 30px #0003}
+.brand{display:flex;align-items:center;gap:10px}.logo{display:grid;place-items:center;width:46px;height:46px;border-radius:14px;background:linear-gradient(145deg,#ffe76a,#ff9c38);font-size:27px;box-shadow:inset 0 -4px #e98426}
+h1{font-size:clamp(17px,3vw,25px);line-height:1;margin:0;letter-spacing:.03em}.subtitle{font-size:11px;color:var(--muted);margin-top:5px;letter-spacing:.13em;font-weight:800}
+.stats{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}.stat{background:#0d1728;border:1px solid #314764;border-radius:12px;padding:8px 11px;min-width:65px;text-align:center}.stat small{display:block;color:var(--muted);font-size:10px;font-weight:800;letter-spacing:.08em}.stat b{font-size:17px}
+.panel{background:#142238;border:1px solid #314764;border-radius:20px;padding:14px;box-shadow:0 10px 30px #0002}
+.gamebar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;flex-wrap:wrap}.levelname{font-weight:900;font-size:16px}.levelname span{color:var(--yellow)}.hint{font-size:12px;color:var(--muted)}
+.canvaswrap{position:relative;width:100%;overflow:hidden;border-radius:16px;border:2px solid #385271;background:#d9f4ff;touch-action:none}
+canvas{display:block;width:100%;height:auto;aspect-ratio:900/540;touch-action:none}
+.overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:16px;background:#081326bf;backdrop-filter:blur(5px);text-align:center}
+.dialog{max-width:390px;background:#172840;border:1px solid #526984;border-radius:22px;padding:24px 22px;box-shadow:0 20px 60px #0008}.dialog .big{font-size:48px}.dialog h2{margin:8px 0;font-size:25px}.dialog p{color:#c5d4e6;line-height:1.5;font-size:14px}
+button{border:0;cursor:pointer;font:inherit;font-weight:900;border-radius:12px;padding:12px 16px;color:#172238;background:var(--yellow);box-shadow:0 4px 0 #cf9620;transition:transform .12s,filter .12s}button:hover{filter:brightness(1.06)}button:active{transform:translateY(3px);box-shadow:0 1px 0 #cf9620}.secondary{color:var(--white);background:#263c58;box-shadow:0 4px 0 #16273d;border:1px solid #48617e}.controls{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px}.btnrow{display:flex;gap:8px;flex-wrap:wrap}.progress{height:8px;background:#0a1423;border-radius:99px;overflow:hidden;margin-top:10px}.progress span{display:block;height:100%;width:0;background:linear-gradient(90deg,#53e0b5,#d8ff70);border-radius:99px;transition:width .2s}
+.bottom{display:grid;grid-template-columns:1.15fr 1fr;gap:12px}.tiptitle{font-size:12px;font-weight:900;letter-spacing:.12em;color:var(--mint);margin-bottom:7px}.tip{font-size:13px;color:#c6d4e5;line-height:1.5}.tip strong{color:var(--white)}.key{display:inline-block;background:#263c58;border:1px solid #4d6684;border-radius:6px;padding:2px 6px;font-size:11px}
+@media(max-width:600px){body{padding:7px}.top{padding:10px;align-items:flex-start}.logo{width:39px;height:39px}.stats{gap:5px}.stat{padding:6px 7px;min-width:49px}.stat b{font-size:14px}.stat small{font-size:9px}.panel{padding:9px}.bottom{grid-template-columns:1fr}.controls{align-items:stretch}.btnrow{width:100%}.btnrow button{flex:1}.dialog{padding:18px}.hint{width:100%}}
+</style>
+</head>
+<body>
+<main class="app">
+<header class="top">
+  <div class="brand"><div class="logo">👷</div><div><h1>SAVE THE WORKER</h1><div class="subtitle">DRAW • DODGE • RESCUE</div></div></div>
+  <div class="stats">
+    <div class="stat"><small>LEVEL</small><b id="levelStat">1</b></div>
+    <div class="stat"><small>COINS</small><b id="coinStat">0</b></div>
+    <div class="stat"><small>XP</small><b id="xpStat">0</b></div>
+    <div class="stat"><small>❤️ LIVES</small><b id="lifeStat">3</b></div>
+  </div>
+</header>
+<section class="panel">
+  <div class="gamebar"><div class="levelname">MISSION <span id="mission">01</span> <span style="color:#9eb1c9">/ 50</span></div><div class="hint" id="hint">Draw a safe route from the worker to the exit.</div></div>
+  <div class="canvaswrap">
+    <canvas id="game" width="900" height="540" aria-label="Save the Worker game canvas"></canvas>
+    <div class="overlay" id="overlay">
+      <div class="dialog"><div class="big">🦺</div><h2>Save the Worker!</h2><p>Draw a path from the worker to the green exit. Avoid hazards, collect coins, and get the worker home safely.</p><button id="startBtn">START RESCUE ▶</button></div>
+    </div>
+  </div>
+  <div class="progress"><span id="progressFill"></span></div>
+  <div class="controls"><div class="btnrow"><button id="runBtn">▶ TEST ROUTE</button><button class="secondary" id="clearBtn">↺ CLEAR</button><button class="secondary" id="resetBtn">⟲ RESTART</button></div><div class="btnrow"><button class="secondary" id="soundBtn">🔊 SOUND ON</button><button class="secondary" id="nextBtn" hidden>NEXT LEVEL →</button></div></div>
+</section>
+<div class="bottom">
+  <section class="panel"><div class="tiptitle">HOW TO PLAY</div><div class="tip">1. <strong>Tap or click</strong> the worker, then drag a route toward the green exit.<br>2. Keep your path away from <strong>fire, spikes, water, and moving hazards</strong>.<br>3. Press <strong>TEST ROUTE</strong> to send the worker. Collect coins along the way!</div></section>
+  <section class="panel"><div class="tiptitle">BUILDER'S TIP</div><div class="tip" id="tip">Safety first! A short safe route beats a risky shortcut.</div><div style="margin-top:9px;color:#9eb1c9;font-size:11px">Progress is saved on this device. Works with mouse and touch.</div></section>
+</div>
+</main>
+<script>
+(()=>{
+'use strict';
+const canvas=document.getElementById('game'),ctx=canvas.getContext('2d');
+const $=id=>document.getElementById(id);
+const W=900,H=540;
+let level=1,coins=0,xp=0,lives=3,route=[],drawing=false,running=false,won=false,dead=false,sound=true,worker={x:90,y:445},exit={x:805,y:95},anim=0,particles=[],collected=new Set(),hazards=[],coinItems=[],last=0,moveT=0;
+const tips=['Safety first! A short safe route beats a risky shortcut.','Watch the moving hazards before you test your route.','Coins are nice, but getting home safely is the real win.','Try drawing wide turns around dangerous areas.','Every rescue makes you a better site safety hero!'];
+function save(){try{localStorage.setItem('stw-save',JSON.stringify({level,coins,xp,lives}))}catch(e){}}
+function load(){try{let d=JSON.parse(localStorage.getItem('stw-save')||'{}');level=Math.max(1,Math.min(50,d.level||1));coins=d.coins||0;xp=d.xp||0;lives=d.lives||3}catch(e){}}
+function rnd(seed){let x=Math.sin(seed*127.1+311.7)*43758.5453;return x-Math.floor(x)}
+function buildLevel(){
+ route=[];running=false;won=false;dead=false;collected.clear();particles=[];moveT=0;
+ worker={x:80,y:450};exit={x:820,y:85};
+ hazards=[];coinItems=[];
+ const n=Math.min(3+Math.floor((level-1)/3),12);
+ for(let i=0;i<n;i++){
+  let x=170+rnd(level*31+i*9)*570,y=80+rnd(level*17+i*13)*380;
+  if(Math.hypot(x-worker.x,y-worker.y)<100||Math.hypot(x-exit.x,y-exit.y)<100){x=250+i*37;y=150+(i%4)*75}
+  const types=['🔥','⚡','🪚','🕳️','🚧','💧'];
+  hazards.push({x,y,r:25+(level%3)*2,type:types[(i+level)%types.length],phase:rnd(i+level)*6,move:(i%3===0),baseX:x,baseY:y});
+ }
+ for(let i=0;i<Math.min(2+Math.floor(level/2),7);i++)coinItems.push({x:180+i*85,y:120+((i*97+level*23)%310),r:13});
+ $('levelStat').textContent=level;$('mission').textContent=String(level).padStart(2,'0');$('coinStat').textContent=coins;$('xpStat').textContent=xp;$('lifeStat').textContent=lives;$('progressFill').style.width=((level-1)/50*100)+'%';
+ $('nextBtn').hidden=true;$('hint').textContent='Draw a safe route from the worker to the exit.';$('tip').textContent=tips[(level-1)%tips.length];
+}
+function soundBeep(freq=500,dur=.08){if(!sound)return;try{let AC=window.AudioContext||window.webkitAudioContext;let a=new AC(),o=a.createOscillator(),g=a.createGain();o.frequency.value=freq;o.type='sine';g.gain.value=.04;o.connect(g);g.connect(a.destination);o.start();g.gain.exponentialRampToValueAtTime(.001,a.currentTime+dur);o.stop(a.currentTime+dur);o.onended=()=>a.close()}catch(e){}}
+function drawBg(){
+ let g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#b9efff');g.addColorStop(1,'#e8f7d8');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+ // clouds
+ for(let i=0;i<5;i++){let x=((i*210+anim*.5)%(W+150))-60,y=45+(i%3)*36;ctx.fillStyle='#ffffffaa';ctx.beginPath();ctx.arc(x,y,22,0,Math.PI*2);ctx.arc(x+22,y-9,27,0,Math.PI*2);ctx.arc(x+48,y,20,0,Math.PI*2);ctx.fill()}
+ // ground blocks
+ ctx.fillStyle='#b9dca3';ctx.fillRect(0,480,W,60);ctx.strokeStyle='#9bc785';ctx.lineWidth=2;
+ for(let x=0;x<W;x+=48){ctx.beginPath();ctx.moveTo(x,480);ctx.lineTo(x,540);ctx.stroke()}
+ // platforms
+ ctx.fillStyle='#d5c09b';ctx.fillRect(0,496,W,44);ctx.fillStyle='#b59a70';ctx.fillRect(0,496,W,6);
+ // road dotted
+ ctx.strokeStyle='#ffffffaa';ctx.lineWidth=4;ctx.setLineDash([16,14]);ctx.beginPath();ctx.moveTo(20,270);ctx.lineTo(880,270);ctx.stroke();ctx.setLineDash([]);
+}
+function drawWorker(x,y){
+ ctx.save();ctx.translate(x,y);
+ // shadow
+ ctx.fillStyle='#26364c33';ctx.beginPath();ctx.ellipse(0,23,22,7,0,0,Math.PI*2);ctx.fill();
+ // legs
+ ctx.strokeStyle='#263b55';ctx.lineWidth=9;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(-6,9);ctx.lineTo(-10,22);ctx.moveTo(6,9);ctx.lineTo(11,21);ctx.stroke();
+ ctx.fillStyle='#304968';ctx.fillRect(-18,18,15,7);ctx.fillRect(5,18,15,7);
+ // body vest
+ ctx.fillStyle='#ff9f2f';ctx.beginPath();ctx.roundRect(-15,-8,30,23,6);ctx.fill();
+ ctx.fillStyle='#fff0a1';ctx.fillRect(-3,-6,6,19);
+ // head
+ ctx.fillStyle='#f5bd87';ctx.beginPath();ctx.arc(0,-19,13,0,Math.PI*2);ctx.fill();
+ // helmet
+ ctx.fillStyle='#ffd83e';ctx.beginPath();ctx.arc(0,-22,14,Math.PI,Math.PI*2);ctx.lineTo(16,-19);ctx.lineTo(-16,-19);ctx.fill();
+ ctx.fillStyle='#fff2a8';ctx.fillRect(-8,-23,16,3);
+ ctx.fillStyle='#27354a';ctx.beginPath();ctx.arc(4,-19,1.8,0,Math.PI*2);ctx.fill();
+ ctx.restore();
+}
+function drawExit(){
+ ctx.save();ctx.translate(exit.x,exit.y);ctx.fillStyle='#52e2a8';ctx.beginPath();ctx.roundRect(-29,-35,58,72,13);ctx.fill();ctx.strokeStyle='#178f70';ctx.lineWidth=4;ctx.stroke();
+ ctx.fillStyle='#fff';ctx.beginPath();ctx.roundRect(-15,-22,30,45,5);ctx.fill();ctx.fillStyle='#3cc98d';ctx.fillRect(-3,-22,6,45);ctx.fillRect(-15,-2,30,5);
+ ctx.fillStyle='#176c59';ctx.font='bold 15px system-ui';ctx.textAlign='center';ctx.fillText('SAFE',0,54);ctx.restore();
+}
+function drawHazard(h,i){
+ let x=h.x,y=h.y;if(h.move){x=h.baseX+Math.sin(anim*.025+h.phase)*35;y=h.baseY+Math.cos(anim*.018+h.phase)*18}
+ ctx.save();ctx.translate(x,y);
+ ctx.fillStyle='#26384c35';ctx.beginPath();ctx.ellipse(0,20,30,8,0,0,Math.PI*2);ctx.fill();
+ ctx.fillStyle=h.type==='💧'?'#3dbbe8':h.type==='🕳️'?'#28374b':h.type==='🚧'?'#ff8e48':h.type==='⚡'?'#a98aff':'#ff735c';
+ ctx.beginPath();ctx.arc(0,0,h.r,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#ffffff99';ctx.lineWidth=3;ctx.stroke();
+ ctx.font='27px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(h.type,0,1);
+ if(h.type==='🔥'){ctx.fillStyle='#ffcf54';ctx.beginPath();ctx.moveTo(-9,10);ctx.quadraticCurveTo(-18,-4,-4,-17);ctx.quadraticCurveTo(-1,-7,4,-13);ctx.quadraticCurveTo(17,1,7,12);ctx.fill()}
+ ctx.restore();h.drawX=x;h.drawY=y;
+}
+function drawCoins(){coinItems.forEach((c,i)=>{if(collected.has(i))return;let bob=Math.sin(anim*.08+i)*3;ctx.save();ctx.translate(c.x,c.y+bob);ctx.fillStyle='#e89a1c';ctx.beginPath();ctx.arc(0,0,c.r+2,0,Math.PI*2);ctx.fill();ctx.fillStyle='#ffd94d';ctx.beginPath();ctx.arc(0,0,c.r-2,0,Math.PI*2);ctx.fill();ctx.fillStyle='#ad6a0e';ctx.font='bold 16px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('$',0,1);ctx.restore()})}
+function drawRoute(){
+ if(route.length<1)return;
+ ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle='#ffffffcc';ctx.lineWidth=17;ctx.beginPath();ctx.moveTo(worker.x,worker.y);route.forEach(p=>ctx.lineTo(p.x,p.y));ctx.stroke();
+ ctx.strokeStyle='#31b8a0';ctx.lineWidth=9;ctx.beginPath();ctx.moveTo(worker.x,worker.y);route.forEach(p=>ctx.lineTo(p.x,p.y));ctx.stroke();
+ route.forEach((p,i)=>{if(i%3===0){ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(p.x,p.y,3,0,Math.PI*2);ctx.fill()}});
+}
+function drawParticles(){particles.forEach(p=>{ctx.globalAlpha=Math.max(0,p.life/35);ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;p.x+=p.vx;p.y+=p.vy;p.vy+=.08;p.life--});particles=particles.filter(p=>p.life>0)}
+function burst(x,y,color){for(let i=0;i<25;i++)particles.push({x,y,vx:(Math.random()-.5)*7,vy:(Math.random()-.8)*7,r:2+Math.random()*4,life:25+Math.random()*20,color})}
+function render(){
+ anim++;drawBg();drawRoute();drawCoins();hazards.forEach(drawHazard);drawExit();
+ if(running&&route.length){let points=[{x:worker.x,y:worker.y},...route,{x:exit.x,y:exit.y}];let total=0;for(let i=1;i<points.length;i++)total+=Math.hypot(points[i].x-points[i-1].x,points[i].y-points[i-1].y);moveT=Math.min(total,moveT+3.3);let d=moveT,pos={x:worker.x,y:worker.y};for(let i=1;i<points.length;i++){let seg=Math.hypot(points[i].x-points[i-1].x,points[i].y-points[i-1].y);if(d<=seg){let t=seg?d/seg:0;pos={x:points[i-1].x+(points[i].x-points[i-1].x)*t,y:points[i-1].y+(points[i].y-points[i-1].y)*t};break}d-=seg;pos=points[i]}
+ drawWorker(pos.x,pos.y);
+ for(let i=0;i<coinItems.length;i++){if(!collected.has(i)&&Math.hypot(pos.x-coinItems[i].x,pos.y-coinItems[i].y)<25){collected.add(i);coins+=1;$('coinStat').textContent=coins;soundBeep(880,.06);burst(pos.x,pos.y,'#ffd447')}}
+ for(let h of hazards){if(Math.hypot(pos.x-h.drawX,pos.y-h.drawY)<h.r+12){fail();break}}
+ if(!dead&&!won&&Math.hypot(pos.x-exit.x,pos.y-exit.y)<34){win()}
+ if(!dead&&!won&&moveT>=total){fail()}
+ }else drawWorker(worker.x,worker.y);
+ drawParticles();
+ if(drawing&&route.length){let p=route[route.length-1];ctx.fillStyle='#ffffffaa';ctx.beginPath();ctx.arc(p.x,p.y,12,0,Math.PI*2);ctx.fill()}
+ requestAnimationFrame(render);
+}
+function win(){won=true;running=false;xp+=25+level*2;coins+=5;lives=Math.min(5,lives+0);$('xpStat').textContent=xp;$('coinStat').textContent=coins;$('hint').textContent='Rescue successful! +5 coins and XP earned.';$('nextBtn').hidden=false;$('overlay').style.display='flex';$('overlay').innerHTML='<div class="dialog"><div class="big">🎉</div><h2>Worker Rescued!</h2><p>Mission complete! You earned <strong>+5 coins</strong> and <strong>+'+(25+level*2)+' XP</strong>. Ready for the next site challenge?</p><button id="overlayNext">NEXT LEVEL →</button></div>';$('overlayNext').onclick=nextLevel;burst(exit.x,exit.y,'#54e4b5');soundBeep(760,.18);save()}
+function fail(){if(dead||won)return;dead=true;running=false;lives=Math.max(0,lives-1);$('lifeStat').textContent=lives;$('hint').textContent='Oops! The route crossed a hazard. Try a safer path.';$('overlay').style.display='flex';$('overlay').innerHTML='<div class="dialog"><div class="big">🚧</div><h2>Not Safe Yet!</h2><p>The worker met a hazard. Clear the route and try a different path. Every good site needs a safety plan.</p><button id="tryBtn">TRY AGAIN ↺</button></div>';$('tryBtn').onclick=()=>{if(lives===0)lives=3;buildLevel();$('overlay').style.display='none'};$('lifeStat').textContent=lives;burst(worker.x,worker.y,'#ff657a');soundBeep(170,.2);save()}
+function nextLevel(){level=level>=50?1:level+1;buildLevel();$('overlay').style.display='none';save()}
+function clearRoute(){if(!running){route=[];won=false;dead=false;$('hint').textContent='Route cleared. Draw a new safe path.';$('nextBtn').hidden=true}}
+function start(){if(!route.length){$('hint').textContent='Draw a route first: start at the worker and drag toward the exit.';soundBeep(240,.06);return}running=true;moveT=0;won=false;dead=false;$('overlay').style.display='none';$('hint').textContent='Worker moving… watch out for hazards!';soundBeep(530,.08)}
+function point(e){let r=canvas.getBoundingClientRect();return{x:(e.clientX-r.left)*W/r.width,y:(e.clientY-r.top)*H/r.height}}
+canvas.addEventListener('pointerdown',e=>{if(running||won)return;let p=point(e);if(Math.hypot(p.x-worker.x,p.y-worker.y)<60||!route.length){drawing=true;route=[p];canvas.setPointerCapture(e.pointerId)}});
+canvas.addEventListener('pointermove',e=>{if(!drawing||running)return;let p=point(e);let last=route[route.length-1];if(!last||Math.hypot(p.x-last.x,p.y-last.y)>8)route.push(p);if(route.length>300)route.shift()});
+canvas.addEventListener('pointerup',()=>{if(drawing){drawing=false;if(route.length){let end=route[route.length-1];if(Math.hypot(end.x-exit.x,end.y-exit.y)>38)route.push({x:exit.x,y:exit.y})}}});
+$('startBtn').onclick=()=>{$('overlay').style.display='none';$('hint').textContent='Draw a path from the worker to the exit.'};
+$('runBtn').onclick=start;$('clearBtn').onclick=clearRoute;$('resetBtn').onclick=()=>{buildLevel();$('overlay').style.display='none'};$('nextBtn').onclick=nextLevel;
+$('soundBtn').onclick=()=>{sound=!sound;$('soundBtn').textContent=sound?'🔊 SOUND ON':'🔇 SOUND OFF';if(sound)soundBeep()};
+load();buildLevel();requestAnimationFrame(render);
+})();
+</script>
+</body>
+</html>
